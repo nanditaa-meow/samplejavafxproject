@@ -1,247 +1,187 @@
-public class CircuitBoard {
-    public static Point[][] points;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.stage.Stage;
+import javafx.scene.control.Button;
+import javafx.scene.shape.Line;
+import javafx.scene.control.TextField;
+
+
+public class BouncingBallsDemo extends Application {
+ CircuitBoard board = new CircuitBoard();
+   public boolean clicked = false;
+    public    int oldX =0;
+    public    int oldY = 0;
     
-    private static boolean firstLoop;
+public boolean resistorAdd = false;
+public boolean batteryAdd = false;
     
-    
-    public CircuitBoard(){
-        points = new Point[10][10]; // creates the 4x4 board
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage stage) {
+        Pane root = new Pane();
+
         
-        for (int i = 0; i < points.length; i++){ // creates a point in each board
-            for (int j = 0; j < points[0].length; j++){
-                points[i][j] = new Point();
-            }
-            firstLoop = true;
-        }
-    }
-    
-    public static int[] findBattery(){ // uses point class find function to find battery
-        for (int i = 0; i < points.length; i++){
-            for (int j = 0; j < points[0].length; j++){
-                if(!(points[i][j].find("battery").equals("item not found"))){
-                    System.out.println("batterylovk" + i);
-                    System.out.println(j);
-                    return new int[]{i,j};
-                }
-            }
-           
-        }
-         System.out.println("No Battery Found. Please add a Battery.");
-            return new int[]{0,0};
-    }
-    
-    
-    /*
-    wires[a][b]
-    a 
-    0 = LEFT
-    1 = RIGHT
-    2 = UP
-    3 = DOWN
-    
-    b
-    0 = direction (will return a)
-    1 = item (will return item stored in a)
-    */
-    
-     public static void add(int x, int y, String direction, String item){ //add things to wires
-        for (int i = 0; i < 4; i++){
-            if (points[x][y].wires[i][0].equals(direction)){ //wires[i][0] iterates through directions of point 
-                
-                points[x][y].wires[i][1] = item;
-                
-                switch(points[x][y].wires[i][0]){
-                    case "LEFT":
-                        points[x-1][y].wires[1][1] = points[x][y].wires[i][1];
-                        
-                        break;
-                    case "RIGHT":
-                        points[x+1][y].wires[0][1] = points[x][y].wires[i][1];
-                        
-                        break;
-                    case "UP":
-                        points[x][y-1].wires[3][1] = points[x][y].wires[i][1];
-                       
-                        break;
-                    case "DOWN":
-                        points[x][y+1].wires[2][1] = points[x][y].wires[i][1];
-                        
-                        break;
-                }
-                
-                return;
-            }
-        }
-        printTest(x,y);
-    }
-    
-    //prints items, for testing
-    public static void printTest(int x,int y){
-        System.out.println("(" + x+", "+y +"): DOWN= "+ points[x][y].wires[3][1]+" UP= "+points[x][y].wires[2][1] + " LEFT= "+points[x][y].wires[0][1]+" RIGHT= "+points[x][y].wires[1][1]);
+        Button b1 = new Button("Get Resistance");
+        b1.setLayoutX(220);
+        b1.setLayoutY(350);
+        b1.setPrefSize(130, 20);
         
-    }
-    
-    //write countWires
-    public static int countWires(int x, int y){
-    int wireNum = 0;
-                for (int i = 0; i < 4; i++){
-             if (!(points[x][y].wires[i][1].equals("empty")) /*&& !(points[x][y].wires[i][1].equals("battery"))*/){
-                wireNum++;
-                }
-                
-            }
-        return wireNum;
-    }
-    public static int loopNum = 0;
-    
-    public static double seriesLoop(int startingX, int startingY, int x, int y, String prevDir){
-        int newX = x;
-        int newY = y;
+        b1.setOnMouseClicked(event -> {
+            System.out.println(loop());
+        });
+
+        Button b2 = new Button("Add Resistor");
+        b2.setLayoutX(80);
+        b2.setLayoutY(335);
+        b2.setPrefSize(120, 20);
         
-        double resistance = 0;
-        int dirLoc = points[x][y].dirToDirLoc(prevDir); //sets resistance to the resistance stored next to prevDir
-        System.out.println("previous "+prevDir + dirLoc);
-        if (!(points[x][y].wires[dirLoc][1].equals("empty")) && !(points[x][y].wires[dirLoc][1].equals("battery")) && !(points[x][y].wires[dirLoc][1].equals("wire")) && !firstLoop){
-            resistance = Double.parseDouble(points[x][y].wires[dirLoc][1]);
+        b2.setOnMouseClicked(event -> {
+                    resistorAdd = true;
+                    batteryAdd = false;
+                    });
+                    
+        
+        TextField t1 = new TextField("   ");
+        t1.setLayoutX(20);
+        t1.setLayoutY(335);
+        t1.setPrefSize(45, 20);
+        
+        TextField t2 = new TextField("   ");
+        t2.setLayoutX(20);
+        t2.setLayoutY(365);
+        t2.setPrefSize(45, 20);
+        
+        Button b3 = new Button("Add Battery");
+        b3.setLayoutX(80);
+        b3.setLayoutY(365);
+        b3.setPrefSize(120, 20);
+        
+         b3.setOnMouseClicked(event -> {
+                    batteryAdd = true;
+                    resistorAdd = false;
+                    });
+        
+      
+        root.getChildren().addAll(b1,b2,b3,t1,t2);
+        
+        Circle[][] points = new Circle[10][10];
+        
+        Circle[][] hitbox = new Circle[10][10];
+        
+        
+        for (int i = 0; i < 10; i++){
+            for (int j = 0; j < 10; j ++){
+                hitbox[i][j] = new Circle((i*30)+50,(j*30)+50,12);
+                hitbox[i][j].setFill(Color.WHITE);
+                points[i][j] = new Circle((i*30)+50,(j*30)+50,2);
+                root.getChildren().add(hitbox[i][j]);
+                root.getChildren().add(points[i][j]);
+                int x = i;
+                int y = j;
+                hitbox[i][j].setOnMouseClicked(event -> {
+                    
+                   
+                    
+                    if (!clicked){
+                        oldX = (x*30)+50;
+                        oldY = (y*30)+50;
+                        clicked = true;
+                    }
+                    else if (batteryAdd){
+                        int newX = (x*30)+50;
+                        int newY = (y*30)+50;
+                        Line wire = new Line(oldX, oldY,newX, newY);
+                    String dir = direction(x,y,(oldX-50)/30,(oldY-50)/30);
+                    CircuitBoard.add(x,y,dir ,"battery");
+                     System.out.println("battery added 1");
+                     CircuitBoard.printTest(x,y);
+                        wire.setStroke(Color.RED);
+                         root.getChildren().add(wire);
+                        System.out.println("battery added");
+                        clicked = false;
+                        batteryAdd = false;
+                    }
+                     else if (resistorAdd && !t1.getCharacters().isEmpty()){
+                         
+                        int newX = (x*30)+50;
+                        int newY = (y*30)+50;
+                        Line wire = new Line(oldX, oldY,newX, newY);
+                         wire.setStroke(Color.BLUE);
+                         String dir = direction(x,y,(oldX-50)/30,(oldY-50)/30);
+                    CircuitBoard.add(x,y,dir ,t1.getCharacters().toString());
+                        System.out.println("resistor added");
+                        System.out.println("resistance: " + t1.getCharacters().toString());
+                        root.getChildren().add(wire);
+                        clicked = false;
+                        resistorAdd = false;
+                    }
+                    else{
+                        int newX = (x*30)+50;
+                        int newY = (y*30)+50;
+                        Line wire = new Line(oldX, oldY,newX, newY);
+                        String dir = direction(x,y,(oldX-50)/30,(oldY-50)/30);
+                    CircuitBoard.add(x,y,dir ,"wire");
+                        root.getChildren().add(wire);
+                        clicked = false;
+                    }
+                    //ai usage: debugged error: local vaiables referenced from a lambda expression must be final
+                    // change made: set variables to be class variables rather than local ones
+        });
+            }
             
         }
-        
-        //remove countwires >2, and replace that with a different if statement that runs parallel if countwires >2
-        if ((x==startingX && y==startingY && firstLoop == false)||countWires(x,y) > 2){
-            return resistance;
-        }//WORKS UP TO HERE PROBABLY
-        
-       // try{
-        
-        String newDir = "looloolalalooloolala"; //this will never print hopefully
-        //checks if 1: direction is not prevID's direction and 2: there is not nothing stored
-        for (int i = 0; i < 4; i++){
-            System.out.println("i: "+i +" dirLoc: "+dirLoc+" points: "+points[x][y].wires[i][1]);
-            if ((i != dirLoc )&&(!(points[x][y].wires[i][1].equals("empty")))){
-                newDir = points[x][y].wires[i][0];
-                System.out.println("new "+newDir);
-                
-                switch(newDir){
-                    case "LEFT":
-                        newX--;
-                        newDir = "RIGHT";
-                        break;
-                    case "RIGHT":
-                        newX++;
-                        newDir = "LEFT";
-                        break;
-                    case "UP":
-                        newY--;
-                        newDir = "DOWN";
-                        break;
-                    case "DOWN":
-                        newY++;
-                        newDir = "UP";
-                        break;
-                }
-                
-            }
-        }
-        
-        firstLoop = false;
-        System.out.println(x);
-        System.out.println(newX);
-        System.out.println(y);
-        System.out.println(newY);
-        loopNum++;
-        //supposed to check if id is same (LOL im not doing that)
-        return resistance + seriesLoop(startingX,startingY,newX,newY,newDir);
-    //    }
-    //    catch(IndexOutOfBoundsException e){
-    //        add(newX,newY,prevDir,"empty");
-   //         return BouncingBallsDemo.loop();
-   //     }
-        
-        
-    }
-    
-    public static void parallelLoop(int startX, int startY, String prevDir){
-        //check if endpoints for two directions found that arent prevDir is the same
-       String dir1 = "";
-       String dir2 = "";
        
-        for (int i = 0; i < 4; i++){
-                String a = points[startX][startY].wires[i][0];
-                if (!a.equals(prevDir) && !a.equals("empty")){
-                    dir1 = a;
-                    break;
-                }
-            }
-            
-         for (int i = 0; i < 4; i++){
-                String a = points[startX][startY].wires[i][0];
-                if (!a.equals(prevDir) && !a.equals("empty") && !a.equals(dir1)){
-                    dir2 = a;
-                    break;
-                }
-            }
-        //if they are the same, gets the resistance of both individual loops (setting startingX to the endpoint X)
-        double resistance = 0;
-        if (findEndPoints(startX,startY,dir1).equals(findEndPoints(startX,startY,dir1))){
-            int finalX = findEndPoints(startX,startY,dir1)[0];
-            int finalY = findEndPoints(startX,startY,dir1)[0];
-            
-            seriesLoop(finalX,finalY,startX,startY,"LEFT");
-        }
+
         
-        //sets one loop to delete, and one to change
-        //makes a resistor that stores the internal resistance in the first wire of change
-            //makes all resistors after that in change into wires
-        //deletes everything in delete
-        //runs loop from the beginning
+     
         
-         
+        Scene scene = new Scene(root, 400, 400,Color.WHITE);
+        stage.setScene(scene);
+        stage.show();
     }
-    
-    
-    
-    
-    
-    
-    
-    public static int[] findEndPoints(int startX, int startY, String newDir){
-        int x = startX;
-        int y = startY;
-        boolean firstLoop = true;
-        String prevDir = "";
-        while (countWires(x,y) ==2 || firstLoop){
-            
-            switch(newDir){
-                    case "LEFT":
-                        x--;
-                        prevDir = "RIGHT";
-                        break;
-                    case "RIGHT":
-                        x++;
-                        prevDir = "LEFT";
-                        break;
-                    case "UP":
-                        y++;
-                        prevDir = "DOWN";
-                        break;
-                    case "DOWN":
-                        y--;
-                        prevDir = "UP";
-                        break;
-                }
-            //    
-            for (int i = 0; i < 4; i++){
-                String a = points[x][y].wires[i][0];
-                if (!a.equals(prevDir) && !a.equals("empty")){
-                    newDir = a;
-                }
-            }
-            firstLoop = false;
-        }
-        
-        return new int[]{x,y};
-    
+
+public static CharSequence blankField(){
+    TextField t = new TextField("   ");
+    return t.getCharacters();
 }
 
-
+public static String direction(int x1,int y1,int x2,int y2){
+    if ((x2-x1) > 0){
+        return  "RIGHT";
+    }
+     if ((x2-x1) < 0){
+        return  "LEFT";
+    }
+    if ((y2-y1) > 0){
+        return  "DOWN";
+    }
+    if ((y2-y1) < 0){
+        return  "UP";
+    }
+    return "error";
+}
+  
+     public static double loop(){
+        int x = CircuitBoard.findBattery()[0];
+         int y = CircuitBoard.findBattery()[1];
+         String batteryDir = CircuitBoard.points[x][y].find("battery");
+         String dir = "meow";
+         for (int i = 0; i < 4; i++){
+             if (!CircuitBoard.points[x][y].wires[i][0].equals(batteryDir) && !CircuitBoard.points[x][y].wires[i][1].equals("empty")){
+                 dir = CircuitBoard.points[x][y].wires[i][0];
+             }
+         }
+         
+         
+         return CircuitBoard.seriesLoop(x,y,x,y,dir);
+    }
+   
+  
 }
