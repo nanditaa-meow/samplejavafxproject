@@ -20,11 +20,26 @@ public boolean batteryAdd = false;
     
 
     public static void main(String[] args) {
+        
+       
+        
         launch(args);
     }
 
     @Override
     public void start(Stage stage) {
+         /*CircuitBoard.add(1,1,"RIGHT","battery");
+        CircuitBoard.add(2,2,"DOWN","1");
+        CircuitBoard.add(3,2,"DOWN","1");
+         CircuitBoard.add(2,1,"DOWN","wire");
+          CircuitBoard.add(2,2,"RIGHT","wire");
+          CircuitBoard.add(2,3,"RIGHT","wire");
+          CircuitBoard.add(2,3,"DOWN","wire");
+          CircuitBoard.add(2,4,"LEFT","wire");
+          CircuitBoard.add(1,4,"UP","wire");
+          CircuitBoard.add(1,3,"UP","wire");
+           CircuitBoard.add(1,2,"UP","wire");*/
+           
         Pane root = new Pane();
 
         
