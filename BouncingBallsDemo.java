@@ -34,7 +34,7 @@ public boolean batteryAdd = false;
         b1.setPrefSize(130, 20);
         
         b1.setOnMouseClicked(event -> {
-            System.out.println(loop());
+            System.out.println(loop2());
         });
 
         Button b2 = new Button("Add Resistor");
@@ -115,9 +115,9 @@ public boolean batteryAdd = false;
                         Line wire = new Line(oldX, oldY,newX, newY);
                          wire.setStroke(Color.BLUE);
                          String dir = direction(x,y,(oldX-50)/30,(oldY-50)/30);
-                    CircuitBoard.add(x,y,dir ,t2.getCharacters().toString());
+                    CircuitBoard.add(x,y,dir ,t1.getCharacters().toString());
                         System.out.println("resistor added");
-                        System.out.println("resistance: " + t2.getCharacters().toString());
+                        System.out.println("resistance: " + t1.getCharacters().toString());
                         root.getChildren().add(wire);
                         clicked = false;
                         resistorAdd = false;
@@ -174,13 +174,23 @@ public static String direction(int x1,int y1,int x2,int y2){
          String batteryDir = CircuitBoard.points[x][y].find("battery");
          String dir = "meow";
          for (int i = 0; i < 4; i++){
-             if (!CircuitBoard.points[x][y].wires[i][0].equals(batteryDir) && !CircuitBoard.points[x][y].wires[i][1].equals("nothing")){
+             if (!CircuitBoard.points[x][y].wires[i][0].equals(batteryDir) && !CircuitBoard.points[x][y].wires[i][1].equals("empty")){
                  dir = CircuitBoard.points[x][y].wires[i][0];
              }
          }
          
          
          return CircuitBoard.seriesLoop(x,y,x,y,dir);
+    }
+    
+    
+         public static double loop2(){
+        int x = CircuitBoard.findBattery()[0];
+         int y = CircuitBoard.findBattery()[1];
+         String batteryDir = CircuitBoard.points[x][y].find("battery");
+         
+         
+         return CircuitBoard.seriesLoop2(batteryDir,x,y,x,y);
     }
    
   
